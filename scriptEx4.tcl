@@ -1,5 +1,9 @@
 set ns [new Simulator]
 
+set nf [open out.nam w] 
+$ns namtrace-all $nf
+
+#ouverture fichier out0, out1 et ou2 en écriture
 set f0 [open out0.tr w]
 set f1 [open out1.tr w]
 set f2 [open out2.tr w]
@@ -16,17 +20,20 @@ $ns duplex-link $n2 $n3 1Mb 100ms DropTail
 $ns duplex-link $n3 $n4 1Mb 100ms DropTail
 
 proc finish {} {
-	global f0 f1 f2
+	global f0 f1 f2 ns nf
+	$ns flush-trace 
+	close $nf 
 	#Close the output files
 	close $f0
 	close $f1
 	close $f2
 
+	exec nam out.nam &	
 	exec xgraph out0.tr out1.tr out2.tr -geometry 800x400 &
 	exit 0
 }
 
-proc attach-expoo-traffic { node sink size burst idle rate } {
+proc attach-expoo-traffic { node sink size burst idle rate color} {
 	set ns [Simulator instance]
 	
 	set source [new Agent/UDP]
@@ -40,6 +47,11 @@ proc attach-expoo-traffic { node sink size burst idle rate } {
 
 	$traffic attach-agent $source
 	$ns connect $source $sink
+
+$ns color 1 Red
+$ns color 2 Blue 
+$ns color 3 Green
+$source set class_ $color
 	return $traffic
 }
 
@@ -67,9 +79,12 @@ $ns attach-agent $n4 $sink0
 $ns attach-agent $n4 $sink1
 $ns attach-agent $n4 $sink2
 
-set source0 [attach-expoo-traffic $n0 $sink0 200 2s 1s 100k]
-set source1 [attach-expoo-traffic $n1 $sink1 200 2s 1s 200k]
-set source2 [attach-expoo-traffic $n2 $sink2 200 2s 1s 300k]
+set source0 [attach-expoo-traffic $n0 $sink0 200 2s 1s 100k 1]
+set source1 [attach-expoo-traffic $n1 $sink1 200 2s 1s 200k 3]
+set source2 [attach-expoo-traffic $n2 $sink2 200 2s 1s 300k 2]
+
+
+
 
 $ns at 0.0 "record"
 #Start the traffic sources
